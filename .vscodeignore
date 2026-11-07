@@ -1,0 +1,6 @@
+.github/**
+test/**
+docs/**
+src/**
+node_modules/.cache/**
+*.log

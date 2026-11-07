@@ -1,0 +1,53 @@
+{
+  "name": "noditrivo",
+  "displayName": "Noditrivo",
+  "description": "Evidence-based change impact intelligence for VS Code",
+  "version": "0.1.0",
+  "private": false,
+  "license": "MIT",
+  "publisher": "armotusitio",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onCommand:noditrivo.openControlCenter"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "noditrivo.openControlCenter",
+        "title": "Noditrivo: Open Control Center"
+      },
+      {
+        "command": "noditrivo.analyzeChanges",
+        "title": "Noditrivo: Analyze Changes"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "noditrivo.openControlCenter"
+        },
+        {
+          "command": "noditrivo.analyzeChanges"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "npm run build && node --test test/*.test.cjs",
+    "package": "npm run check && vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.96.0",
+    "typescript": "^5.7.0",
+    "@vscode/vsce": "^3.2.0"
+  }
+}
