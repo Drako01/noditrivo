@@ -26,6 +26,16 @@ test('registers its commands and opens a locked-down Control Center', () => {
   assert.match(lastHtml(host), /default-src 'none'/);
 });
 
+test('selecting the Activity Bar entry opens the Control Center once', () => {
+  const host = activate({ rootPath: process.cwd() });
+  const entry = host.treeViews.get('noditrivo.entry');
+  assert.ok(entry, 'the Activity Bar view is registered');
+  assert.equal(host.panels.length, 0);
+  entry.showWhenVisible(true);
+  assert.equal(host.panels.length, 1);
+  assert.equal(entry.options.treeDataProvider.getChildren()[0].command.command, 'noditrivo.openControlCenter');
+});
+
 test('analyzes a real repository, compares with the previous run and persists the cache', async () => {
   const repo = createRepo();
   try {
@@ -44,7 +54,7 @@ test('analyzes a real repository, compares with the previous run and persists th
     panel.post({ type: 'analyze', baseline: 'HEAD' });
     await until(finished(host, 2), 'second analysis');
     assert.ok(lastHtml(host).includes('Evidence: 1 new · 0 existing · 0 resolved. Direct imports: 0 new · 1 existing · 0 resolved.'));
-    assert.match(lastHtml(host), /<span class="badge">new<\/span>/);
+    assert.match(lastHtml(host), /<span class="badge badge-new">new<\/span>/);
 
     repo.write('openapi.yaml', OPENAPI_TWO_PATHS);
     panel.post({ type: 'analyze', baseline: 'HEAD' });
