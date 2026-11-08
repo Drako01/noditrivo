@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'node:path';
 import type { DocumentChange } from './core/evidence';
 import { getChangedFiles, readFileAtBaseline } from './core/git';
-import { analyzeImpact, CONTRACT_FILE, SQL_FILE, type ChangedFile, type ImpactReport } from './core/impact';
+import { analyzeImpact, isAnalyzableDocument, type ChangedFile, type ImpactReport } from './core/impact';
 import type { MessageKey, MessageParams } from './i18n';
 
 /** Hard bounds that keep the analysis predictable on large repositories. */
@@ -126,7 +126,7 @@ export async function runAnalysis(root: vscode.WorkspaceFolder, baseline: string
     await inBatches(files, readSource);
 
     const documents: DocumentChange[] = [];
-    await inBatches(changed.filter(file => CONTRACT_FILE.test(file.path) || SQL_FILE.test(file.path)), async file => {
+    await inBatches(changed.filter(file => isAnalyzableDocument(file.path)), async file => {
       const document = await readDocument(file);
       if (document) documents.push(document);
     });

@@ -4,7 +4,7 @@ import type { ChangeStatus } from './impact';
 /** Bumped whenever the shape of `Evidence` changes incompatibly. */
 export const EVIDENCE_SCHEMA_VERSION = 1;
 
-export type AnalyzerId = 'openapi' | 'sql';
+export type AnalyzerId = 'openapi' | 'sql' | 'compose' | 'kubernetes' | 'terraform';
 export type Severity = 'breaking' | 'potentially-breaking' | 'info';
 
 /** Every rule an analyzer can emit. Each one has `rule.<id>` copy in the i18n catalog. */
@@ -44,6 +44,31 @@ export const RULE_IDS = [
   'sql.drop-index',
   'sql.create-index-blocking',
   'sql.write-without-where',
+  'compose.document-unparseable',
+  'compose.service-removed',
+  'compose.dangling-reference',
+  'compose.volume-removed',
+  'compose.published-port-removed',
+  'compose.env-variable-added',
+  'compose.image-changed',
+  'compose.inline-secret',
+  'kubernetes.document-unparseable',
+  'kubernetes.resource-removed',
+  'kubernetes.dangling-reference',
+  'kubernetes.service-selector-orphaned',
+  'kubernetes.selector-changed',
+  'kubernetes.service-port-removed',
+  'kubernetes.secret-in-manifest',
+  'terraform.document-unparseable',
+  'terraform.resource-removed',
+  'terraform.dangling-reference',
+  'terraform.variable-added-required',
+  'terraform.variable-removed',
+  'terraform.output-removed',
+  'terraform.backend-changed',
+  'terraform.sensitive-literal',
+  'terraform.plan-delete',
+  'terraform.plan-replace',
 ] as const;
 export type RuleId = typeof RULE_IDS[number];
 
@@ -79,6 +104,15 @@ export function createEvidence(draft: EvidenceDraft): Evidence {
     .digest('hex')
     .slice(0, 16);
   return { schemaVersion: EVIDENCE_SCHEMA_VERSION, id, ...draft };
+}
+
+/** Records one finding of a fixed analyzer and file; shared by every analyzer that walks a document. */
+export type EvidenceSink = (rule: RuleId, severity: Severity, subject: string, location: string, confidence?: Evidence['confidence']) => void;
+
+export function evidenceCollector(analyzer: AnalyzerId, file: string, out: Evidence[]): EvidenceSink {
+  return (rule, severity, subject, location, confidence = 'high') => {
+    out.push(createEvidence({ analyzer, rule, severity, confidence, file, subject, location }));
+  };
 }
 
 const SEVERITY_ORDER: Readonly<Record<Severity, number>> = { breaking: 0, 'potentially-breaking': 1, info: 2 };

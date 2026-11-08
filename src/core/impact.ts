@@ -1,7 +1,9 @@
 import * as path from 'node:path';
 import { dedupeEvidence, EVIDENCE_SCHEMA_VERSION, type DocumentChange, type Evidence } from './evidence';
+import { analyzeInfra, isInfraDocument } from './infra';
 import { analyzeOpenApi, looksLikeOpenApi } from './openapi';
 import { analyzeSql } from './sql';
+import { isTerraformPath } from './terraform';
 
 export type ChangeStatus = 'added' | 'modified' | 'deleted' | 'renamed' | 'copied' | 'untracked' | 'unsaved';
 export type LimitationCode =
@@ -11,7 +13,8 @@ export type LimitationCode =
   | 'scan-truncated'
   | 'files-skipped'
   | 'openapi-static-comparison'
-  | 'sql-static-parse';
+  | 'sql-static-parse'
+  | 'infra-static-analysis';
 
 export interface ChangedFile {
   readonly path: string;
@@ -51,6 +54,8 @@ const SOURCE_EXTENSION = /\.(?:tsx?|jsx?|mjs|cjs)$/;
 /** Files that may hold a contract or a migration; the extension host reads their baseline content. */
 export const CONTRACT_FILE = /\.(?:ya?ml|json)$/i;
 export const SQL_FILE = /\.sql$/i;
+/** Changed files whose baseline and current text the extension host must read for the document analyzers. */
+export const isAnalyzableDocument = (file: string): boolean => CONTRACT_FILE.test(file) || SQL_FILE.test(file) || isTerraformPath(file);
 
 export function normalizeRelative(value: string): string {
   return value.replace(/\\/g, '/').replace(/^\.\//, '');
@@ -127,13 +132,14 @@ export function analyzeImpact(
     limitations.push('openapi-static-comparison');
   }
   if (documents.some(document => SQL_FILE.test(document.path))) limitations.push('sql-static-parse');
+  if (documents.some(isInfraDocument)) limitations.push('infra-static-analysis');
 
   return {
     schemaVersion: EVIDENCE_SCHEMA_VERSION,
     baseline,
     changedFiles: changed,
     findings,
-    evidence: dedupeEvidence([...openApi, ...sql]),
+    evidence: dedupeEvidence([...openApi, ...sql, ...analyzeInfra(documents)]),
     coverage,
     limitations,
   };

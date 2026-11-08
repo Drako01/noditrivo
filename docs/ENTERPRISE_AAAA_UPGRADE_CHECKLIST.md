@@ -18,6 +18,11 @@ Updated: 2026-11-07.
 - [x] `npm install` + `npm run check` executed: build OK, 22/22 tests passing
 - [ ] Manual keyboard/screen-reader and light/dark visual QA inside VS Code
 
+## Phase 3 completion
+- [x] Docker Compose, Kubernetes and Terraform (HCL and `terraform show -json` plans) static analyzers with evidence, English/Spanish copy and a scope limitation in the UI
+- [x] Fixture corpus `test/fixtures/infra/` (33 cases, 0 false positives) plus unit tests; `npm run check`: build OK, 43/43 tests passing
+- [x] Pure analyzers (no process, network or filesystem access; enforced by a test); secret values never enter evidence
+
 ## Not validated yet
 - [ ] Manual end-to-end testing inside VS Code (the `vscode`-dependent layer `src/analysis.ts` and `src/extension.ts` is type-checked but not exercised by automated tests)
 - [ ] Verify VSIX packaging
@@ -27,7 +32,7 @@ Updated: 2026-11-07.
 - [ ] Release or marketplace publication (not authorized)
 
 ## Known limitations
-The baseline compares the working tree (tracked changes, untracked files and unsaved editors) against a Git ref; this is not full Git branch/PR impact analysis. Analysis covers only direct relative JS/TS imports; it does not detect transitive edges, aliases, runtime behavior, database migrations, APIs, or infrastructure changes. Unsaved editors replace on-disk content only for files found by the scan. A reported import is evidence of a dependency, **not** evidence of a defect.
+The baseline compares the working tree (tracked changes, untracked files and unsaved editors) against a Git ref; this is not full Git branch/PR impact analysis. Import tracing covers only direct relative JS/TS imports (no transitive edges, aliases or runtime behavior). OpenAPI, SQL migrations, Docker Compose, Kubernetes and Terraform are compared statically and only among the changed files, as described in the master plan scope notes. Unsaved editors replace on-disk content only for files found by the scan. A reported import is evidence of a dependency, **not** evidence of a defect.
 
 ## Working rule
 Retest only impacted areas when they change; run full verification at release gates. Avoid duplicated validations without justification.

@@ -1,0 +1,12 @@
+# expect: none
+services:
+  web:
+    image: nginx:1
+@@@@
+services:
+  web:
+    image: nginx:1
+    environment:
+      LEVEL: "${LEVEL:-info}"
+      RETRIES: "${RETRIES-3}"
+      LITERAL_DOLLAR: "cost $$HOME"

@@ -1,0 +1,16 @@
+# expect: compose.published-port-removed compose.volume-removed
+services:
+  web:
+    image: nginx:1
+    ports:
+      - "8080:80"
+    volumes:
+      - data:/var/data
+volumes:
+  data: {}
+@@@@
+services:
+  web:
+    image: nginx:1
+    ports:
+      - "9090:80"

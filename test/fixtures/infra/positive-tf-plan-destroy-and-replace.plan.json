@@ -1,0 +1,11 @@
+// expect: terraform.plan-delete terraform.plan-replace
+{
+  "format_version": "1.2",
+  "resource_changes": [
+    {"address": "aws_s3_bucket.old", "mode": "managed", "change": {"actions": ["delete"]}},
+    {"address": "aws_instance.web", "mode": "managed", "change": {"actions": ["delete", "create"]}},
+    {"address": "aws_instance.api", "mode": "managed", "change": {"actions": ["update"]}},
+    {"address": "aws_instance.new", "mode": "managed", "change": {"actions": ["create"]}},
+    {"address": "data.aws_ami.base", "mode": "data", "change": {"actions": ["delete"]}}
+  ]
+}
