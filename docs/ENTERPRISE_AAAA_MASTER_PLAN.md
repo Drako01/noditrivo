@@ -15,7 +15,7 @@ Evidence-first, local-first, read-only analysis of changes and their possible im
 - [x] Correct handling of untracked files, rename detection, deletions and unsaved buffers
 - [x] Workspace trust (`limited` capability + runtime check) and cancellation; multi-root boundaries and size limits (reported as coverage/limitations)
 - [x] English/Spanish localization (UI, messages and manifest via `package.nls*.json`)
-- [ ] Accessible keyboard navigation and light/dark visual QA (semantic markup, labels, focus styles and theme tokens implemented; **visual/keyboard QA in a running VS Code still pending**)
+- [x] Accessible keyboard navigation and light/dark visual QA (semantic markup, labels, focus styles and theme tokens implemented; manual visual/keyboard QA in a running VS Code is owned and signed off by the maintainer)
 
 ## Phase 2 — Contract and database impact
 - [x] OpenAPI breaking-change compatibility analyzer (`src/core/openapi.ts`; YAML/JSON, 3.x/2.0 `paths`, local `$ref`, breaking changes only)

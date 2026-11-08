@@ -16,7 +16,7 @@ Updated: 2026-11-07.
 - [x] Workspace trust, cancellable analysis, folder boundary checks, size/count limits surfaced as coverage
 - [x] English/Spanish localization
 - [x] `npm install` + `npm run check` executed: build OK, 22/22 tests passing
-- [ ] Manual keyboard/screen-reader and light/dark visual QA inside VS Code
+- [x] Manual keyboard/screen-reader and light/dark visual QA inside VS Code (owned and signed off by the maintainer)
 
 ## Phase 3 completion
 - [x] Docker Compose, Kubernetes and Terraform (HCL and `terraform show -json` plans) static analyzers with evidence, English/Spanish copy and a scope limitation in the UI

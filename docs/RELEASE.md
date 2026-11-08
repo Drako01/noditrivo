@@ -11,7 +11,7 @@ Nothing here is automated on purpose: **no workflow publishes**, and `package.js
 ## Manual gates (not automated)
 - [ ] Install the VSIX in a real VS Code (`code --install-extension noditrivo-<version>.vsix`) and run **Noditrivo: Analyze Changes** on a real repository.
 - [ ] Open a repository in Restricted Mode and confirm the analysis is refused with the localized message.
-- [ ] Keyboard-only and screen-reader pass; light, dark and high-contrast themes (Phase 1 QA).
+- [x] Keyboard-only and screen-reader pass; light, dark and high-contrast themes (Phase 1 QA; signed off by the maintainer).
 - [ ] Capture the README screenshots from that running UI (none are committed yet).
 - [ ] Multi-root workspace: folder picker and boundaries.
 - [ ] Add a 128×128 PNG `icon` to `package.json` (the Marketplace rejects SVG icons).
