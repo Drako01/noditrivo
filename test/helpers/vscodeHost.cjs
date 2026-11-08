@@ -25,6 +25,10 @@ class Uri {
   toString() { return `file://${this.fsPath.replace(/\\/g, '/')}`; }
 }
 
+class TreeItem {
+  constructor(label) { this.label = label; }
+}
+
 class RelativePattern {
   constructor(base, pattern) {
     this.base = base;
@@ -52,6 +56,7 @@ let current;
 const vscode = {
   CancellationError,
   Uri,
+  TreeItem,
   RelativePattern,
   ViewColumn: { One: 1 },
   ProgressLocation: { Notification: 15 },
@@ -63,6 +68,12 @@ const vscode = {
     },
   },
   window: {
+    createTreeView(viewId, options) {
+      const listeners = [];
+      const view = { viewId, options, showWhenVisible(visible) { listeners.forEach(listener => listener({ visible })); }, onDidChangeVisibility(listener) { listeners.push(listener); return { dispose() {} }; }, dispose() {} };
+      current.treeViews.set(viewId, view);
+      return view;
+    },
     createWebviewPanel(viewType, title, column, options) {
       const listeners = { receive: [], dispose: [] };
       const panel = {
@@ -130,7 +141,7 @@ function createHost({ rootPath, folders, trusted = true, language = 'en', docume
   const resolved = folders ?? (rootPath ? [{ name: path.basename(rootPath), uri: Uri.file(rootPath), index: 0 }] : undefined);
   current = {
     language, trusted, folders: resolved, documents, cancelled,
-    commands: new Map(), panels: [], errors: [], inputBox: undefined, quickPick: undefined,
+    commands: new Map(), treeViews: new Map(), panels: [], errors: [], inputBox: undefined, quickPick: undefined,
   };
   const state = new Map(initialState);
   const context = {
