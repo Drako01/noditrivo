@@ -25,6 +25,7 @@ const REQUIRED = [
   'extension/dist/core/cache.js',
   'extension/node_modules/yaml/package.json',
   'extension/readme.md',
+  'extension/media/brand/noditrivo-icon-256.png',
 ];
 /** Anything matching must never ship: sources, tests, docs, tooling, maps, environment files, nested packages. */
 const FORBIDDEN = [

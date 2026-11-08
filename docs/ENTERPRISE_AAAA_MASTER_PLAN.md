@@ -58,4 +58,4 @@ Phase 4 scope notes:
 - Benchmark budgets are loose regression ceilings on synthetic workloads, not performance guarantees.
 
 ## Definition of Done
-Every shipped finding has traceable evidence and explicit analyzer scope. Changed-file and baseline semantics are documented. No implicit mutation of project, database or infrastructure. No claims of fully supported ecosystems without corresponding fixtures, tests and validations. Tests and package smoke must pass before publication. No automatic publishing enabled.
+Every shipped finding has traceable evidence and explicit analyzer scope. Changed-file and baseline semantics are documented. No implicit mutation of project, database or infrastructure. No claims of fully supported ecosystems without corresponding fixtures, tests and validations. Tests and package smoke must pass before publication. Publishing runs only from a merge to `main` that carries a new, changelogged version and passes the approval of the protected environments.

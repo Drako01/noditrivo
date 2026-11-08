@@ -1,12 +1,14 @@
-# Public source repository. This workflow never publishes the pull-request branch.
-# Release requires a finalized changelog, an exact protected tag at the release SHA
-# and explicit approval through the configured protected environments
+# Public source repository. This workflow never publishes a pull-request branch.
+# Release requires a finalized changelog entry for a version without a GitHub Release,
+# runs from main (or an exact protected tag) and needs explicit approval through the protected environments
 # (marketplace, open-vsx, github-release), which the repository owner must create.
 name: publish
 on:
   push:
-    # Never run publish preflight on a plain merge to main. An owner-created
-    # protected tag (or confirmed manual dispatch) is the only release trigger.
+    # A merge to main releases only when package.json carries a version that has a
+    # finalized changelog entry and no GitHub Release yet; every other merge is a no-op.
+    # A protected v* tag pushed by the owner (or a confirmed manual dispatch) also works.
+    branches: [main]
     tags: ['v*']
   workflow_dispatch:
     inputs:
@@ -69,22 +71,25 @@ jobs:
               echo "::error::Owner confirmation and version are required"; exit 1;
             }
           fi
-          grep -Fq "## [$version] — " CHANGELOG.md || { echo "::error::Version has no finalized changelog"; exit 1; }
+          if ! grep -Fq "## [$version] — " CHANGELOG.md; then
+            # An ordinary merge to main without a release entry is simply not a release.
+            [[ "$EVENT" == "push" && "$GITHUB_REF_TYPE" == "branch" ]] || { echo "::error::Version has no finalized changelog"; exit 1; }
+            echo "::notice::Version $version has no finalized changelog entry; nothing to release."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if gh release view "v$version" >/dev/null 2>&1; then
             echo "v$version already has a GitHub Release; refusing duplicate publication."
             echo "publish=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # Repository ruleset disallows arbitrary automation from creating v* tags.
-          # A maintainer must create the protected tag pointing to exact main HEAD.
-          tag_sha=$(git ls-remote --tags origin "refs/tags/v$version^{}" | cut -f1)
-          [[ -n "$tag_sha" ]] || tag_sha=$(git ls-remote --tags origin "refs/tags/v$version" | cut -f1)
-          if [[ -z "$tag_sha" ]]; then
-            echo "Protected tag v$version not yet created. Owner must create it; no publication."
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          # Tag-triggered runs must point at the exact commit; a merge to main creates the tag
+          # itself when the GitHub Release is made (see the github-release job).
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            tag_sha=$(git ls-remote --tags origin "refs/tags/v$version^{}" | cut -f1)
+            [[ -n "$tag_sha" ]] || tag_sha=$(git ls-remote --tags origin "refs/tags/v$version" | cut -f1)
+            [[ "$tag_sha" == "$GITHUB_SHA" ]] || { echo "::error::Release tag and source SHA differ"; exit 1; }
           fi
-          [[ "$tag_sha" == "$GITHUB_SHA" ]] || { echo "::error::Release tag and source SHA differ"; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "publish=true" >> "$GITHUB_OUTPUT"
 
@@ -261,7 +266,7 @@ jobs:
             exit 0
           fi
           gh release create "$tag" noditrivo.vsix noditrivo.vsix.sha256 reports/noditrivo-sbom.cdx.json \
-            --title "Noditrivo $RELEASE_VERSION" --generate-notes
+            --title "Noditrivo $RELEASE_VERSION" --generate-notes --target "$GITHUB_SHA"
           mkdir -p verify
           gh release download "$tag" --pattern noditrivo.vsix --dir verify
           published_sha="$(cut -d' ' -f1 noditrivo.vsix.sha256)"
