@@ -71,6 +71,24 @@
           "command": "noditrivo.analyzeChanges"
         }
       ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "noditrivo",
+          "title": "Noditrivo",
+          "icon": "media/brand/noditrivo-activity-bar.svg"
+        }
+      ]
+    },
+    "views": {
+      "noditrivo": [
+        {
+          "id": "noditrivo.entry",
+          "name": "Control Center",
+          "type": "tree"
+        }
+      ]
     }
   },
   "scripts": {
