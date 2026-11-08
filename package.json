@@ -17,15 +17,21 @@
     "onCommand:noditrivo.openControlCenter"
   ],
   "main": "./dist/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "%noditrivo.untrusted.description%"
+    }
+  },
   "contributes": {
     "commands": [
       {
         "command": "noditrivo.openControlCenter",
-        "title": "Noditrivo: Open Control Center"
+        "title": "%noditrivo.command.openControlCenter%"
       },
       {
         "command": "noditrivo.analyzeChanges",
-        "title": "Noditrivo: Analyze Changes"
+        "title": "%noditrivo.command.analyzeChanges%"
       }
     ],
     "menus": {
@@ -47,7 +53,10 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.96.0",
-    "typescript": "^5.7.0",
-    "@vscode/vsce": "^3.2.0"
+    "@vscode/vsce": "^3.2.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "yaml": "2.9.1"
   }
 }

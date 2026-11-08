@@ -1,0 +1,37 @@
+# expect: openapi.response-property-became-optional openapi.response-property-removed openapi.type-changed
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, name]
+                properties:
+                  id: {type: integer}
+                  name: {type: string}
+                  nick: {type: string}
+                  total: {type: integer}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id: {type: integer}
+                  name: {type: string}
+                  total: {type: string}

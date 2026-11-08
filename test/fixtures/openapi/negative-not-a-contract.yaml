@@ -1,0 +1,12 @@
+# expect: none
+services:
+  api:
+    image: example/api:1
+    ports: ['3000:3000']
+---
+services:
+  api:
+    image: example/api:2
+    ports: ['3000:3000']
+  db:
+    image: postgres:16

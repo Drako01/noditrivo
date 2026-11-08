@@ -1,0 +1,54 @@
+# expect: none
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ratio: {type: number}
+                  kind: {type: string, enum: [a, b, c]}
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                qty: {type: integer}
+                mode: {type: string, enum: [x, y]}
+      responses:
+        '201': {description: created}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ratio: {type: integer}
+                  kind: {type: string, enum: [a, b]}
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                qty: {type: number}
+                mode: {type: string, enum: [x, y, z]}
+      responses:
+        '201': {description: created}

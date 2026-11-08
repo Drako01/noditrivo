@@ -1,0 +1,5 @@
+{
+  "noditrivo.command.openControlCenter": "Noditrivo: Open Control Center",
+  "noditrivo.command.analyzeChanges": "Noditrivo: Analyze Changes",
+  "noditrivo.untrusted.description": "Analysis runs Git on the repository, so it is disabled until the workspace is trusted. The Control Center can still be opened."
+}

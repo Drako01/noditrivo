@@ -1,0 +1,39 @@
+# expect: none
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id: {type: integer}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+paths:
+  /pets:
+    get:
+      parameters:
+        - {name: limit, in: query, schema: {type: integer}}
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id: {type: integer}
+                  nickname: {type: string}
+  /owners:
+    get:
+      responses:
+        '200': {description: ok}

@@ -1,0 +1,12 @@
+# expect: openapi.document-unparseable
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200': {description: ok}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+paths: [unclosed

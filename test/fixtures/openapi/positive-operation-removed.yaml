@@ -1,0 +1,19 @@
+# expect: openapi.operation-removed
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+paths:
+  /pets/{id}:
+    get:
+      responses:
+        '200': {description: ok}
+    delete:
+      responses:
+        '204': {description: gone}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+paths:
+  /pets/{id}:
+    get:
+      responses:
+        '200': {description: ok}
