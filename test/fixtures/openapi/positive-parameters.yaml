@@ -1,0 +1,22 @@
+# expect: openapi.parameter-became-required openapi.parameter-added-required openapi.parameter-removed
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+paths:
+  /pets:
+    get:
+      parameters:
+        - {name: limit, in: query, schema: {type: integer}}
+        - {name: legacy, in: query, schema: {type: string}}
+      responses:
+        '200': {description: ok}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+paths:
+  /pets:
+    get:
+      parameters:
+        - {name: limit, in: query, required: true, schema: {type: integer}}
+        - {name: tenant, in: header, required: true, schema: {type: string}}
+      responses:
+        '200': {description: ok}

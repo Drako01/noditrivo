@@ -1,0 +1,35 @@
+# expect: none
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+security:
+  - apiKey: []
+paths:
+  /pets:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {type: object}}
+      responses:
+        '201': {description: created}
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+security:
+  - apiKey: []
+paths:
+  /pets:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {type: object}}
+          application/xml: {schema: {type: object}}
+      responses:
+        '201': {description: created}
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}

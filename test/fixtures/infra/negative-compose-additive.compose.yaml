@@ -1,0 +1,24 @@
+# expect: none
+services:
+  web:
+    image: nginx:1
+    ports:
+      - "8080:80"
+volumes:
+  data: {}
+@@@@
+services:
+  web:
+    image: nginx:1
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - data:/var/data
+      - cache:/var/cache
+  cache:
+    image: redis:7
+    depends_on: []
+volumes:
+  data: {}
+  cache: {}

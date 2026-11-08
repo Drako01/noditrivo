@@ -1,0 +1,16 @@
+# expect: compose.env-variable-added compose.env-variable-added
+services:
+  web:
+    image: nginx:1
+  worker:
+    image: busybox:1
+@@@@
+services:
+  web:
+    image: nginx:1
+    environment:
+      DB_HOST: "${DB_HOST}"
+  worker:
+    image: busybox:1
+    environment:
+      - API_URL

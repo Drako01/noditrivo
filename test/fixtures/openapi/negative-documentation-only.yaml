@@ -1,0 +1,40 @@
+# expect: none
+openapi: 3.0.3
+info: {title: Pets, version: '1', description: Old}
+tags: [{name: a}, {name: b}]
+paths:
+  /pets:
+    get:
+      summary: List
+      tags: [a, b]
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema: {type: string, example: x}
+  /owners:
+    get:
+      responses:
+        '200': {description: ok}
+---
+openapi: 3.0.3
+info: {title: Pets API, version: '1.1', description: A much better description}
+tags: [{name: b}, {name: a}]
+paths:
+  /owners:
+    get:
+      description: Reordered and documented
+      responses:
+        '200': {description: all owners}
+  /pets:
+    get:
+      summary: List all pets
+      description: Added text
+      tags: [b, a]
+      responses:
+        '200':
+          description: the pets
+          content:
+            application/json:
+              schema: {type: string, example: y}

@@ -1,0 +1,18 @@
+# expect: none
+services:
+  web:
+    image: nginx:1
+    ports:
+      - "8080:80/tcp"
+      - "5353:53/udp"
+      - "80"
+@@@@
+services:
+  web:
+    image: nginx:1
+    ports:
+      - "127.0.0.1:8080:80"
+      - target: 53
+        published: 5353
+        protocol: udp
+      - "80"

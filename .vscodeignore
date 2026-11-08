@@ -1,0 +1,17 @@
+.github/**
+.vscode/**
+test/**
+docs/**
+src/**
+scripts/**
+tsconfig.json
+.gitignore
+**/*.map
+**/*.ts
+!node_modules/**/*.d.ts
+node_modules/.cache/**
+*.vsix
+*.log
+demo/**
+.vscode-test/**
+media/brand/*.png

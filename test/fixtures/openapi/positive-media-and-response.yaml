@@ -1,0 +1,32 @@
+# expect: openapi.media-type-removed openapi.response-removed
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json: {schema: {type: object}}
+            application/xml: {schema: {type: object}}
+  /owners:
+    get:
+      responses:
+        '200': {description: ok}
+        '404': {description: missing}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json: {schema: {type: object}}
+  /owners:
+    get:
+      responses:
+        '404': {description: missing}

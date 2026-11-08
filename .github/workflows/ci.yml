@@ -1,0 +1,97 @@
+name: CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      capture_screenshots:
+        description: 'Render README screenshots in a real VS Code and upload them for review (never commits)'
+        type: boolean
+        required: false
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: noditrivo-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    name: Verify (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Build and validate the immutable PR HEAD, not GitHub's synthetic
+          # pull_request merge commit, so release evidence binds to one SHA.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Install
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify TypeScript build, unit, fixture, functional, security and performance tests
+        run: npm run check
+      - name: Generate reproducible dependency SBOM
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p reports
+          npm sbom --sbom-format cyclonedx > reports/noditrivo-sbom.cdx.json
+      - name: Archive dependency SBOM
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: noditrivo-sbom
+          path: reports/noditrivo-sbom.cdx.json
+          if-no-files-found: error
+      - name: Package candidate VSIX
+        if: runner.os == 'Linux'
+        # Runtime dependencies (yaml) ship inside the VSIX, so no --no-dependencies here.
+        run: npx --no-install vsce package --out noditrivo.vsix
+      - name: Smoke-test and checksum the candidate VSIX
+        if: runner.os == 'Linux'
+        run: |
+          node scripts/smoke-vsix.cjs noditrivo.vsix
+          sha256sum noditrivo.vsix > noditrivo.vsix.sha256
+      - name: Upload candidate VSIX
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: noditrivo-candidate-vsix
+          path: |
+            noditrivo.vsix
+            noditrivo.vsix.sha256
+          if-no-files-found: error
+
+  screenshots:
+    name: Render README screenshots in real VS Code (manual)
+    # Manual only: ordinary PR CI never runs this. The job uploads the PNG files for reviewer
+    # inspection and never commits or pushes; refresh docs/images/ from the reviewed artifact.
+    if: github.event_name == 'workflow_dispatch' && inputs.capture_screenshots == true && github.repository == 'Drako01/noditrivo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Capture the Control Center from a real VS Code (virtual display)
+        run: xvfb-run -a npm run screenshots
+      - name: Upload screenshots for reviewer inspection
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: noditrivo-readme-screenshots
+          path: docs/images/*.png
+          if-no-files-found: error

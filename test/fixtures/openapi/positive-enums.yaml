@@ -1,0 +1,38 @@
+# expect: openapi.request-enum-value-removed openapi.response-enum-value-added
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema: {type: string, enum: [x, y]}
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema: {type: string, enum: [a, b, c]}
+      responses:
+        '201': {description: created}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema: {type: string, enum: [x, y, z]}
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema: {type: string, enum: [a, b]}
+      responses:
+        '201': {description: created}

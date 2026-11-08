@@ -1,0 +1,268 @@
+# Public source repository. This workflow never publishes the pull-request branch.
+# Release requires a finalized changelog, an exact protected tag at the release SHA
+# and explicit approval through the configured protected environments
+# (marketplace, open-vsx, github-release), which the repository owner must create.
+name: publish
+on:
+  push:
+    # Never run publish preflight on a plain merge to main. An owner-created
+    # protected tag (or confirmed manual dispatch) is the only release trigger.
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Enter PUBLISH_NODITRIVO to authorize this main revision
+        required: true
+        type: string
+      version:
+        description: Must match package.json version
+        required: true
+        type: string
+      registries:
+        type: choice
+        options: [both, marketplace, open-vsx]
+        default: both
+      recovery_run_id:
+        description: Optional run ID whose verified VSIX must be reused (same SHA only)
+        required: false
+        type: string
+permissions: {}
+concurrency:
+  group: noditrivo-publish
+  cancel-in-progress: false
+jobs:
+  authorize:
+    name: Release authorization and protected tag
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      publish: ${{ steps.gate.outputs.publish }}
+      version: ${{ steps.gate.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check exact candidate and protected tag before any external action
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          REQUEST_VERSION: ${{ inputs.version }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          is_private=$(node -p "Boolean(require('./package.json').private)")
+          if [[ "$is_private" == "true" ]]; then
+            echo "Private candidate: release pipeline safely skipped."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Invalid version"; exit 1; }
+          if [[ "$EVENT" == "workflow_dispatch" ]]; then
+            [[ "$CONFIRMATION" == "PUBLISH_NODITRIVO" && "$REQUEST_VERSION" == "$version" ]] || {
+              echo "::error::Owner confirmation and version are required"; exit 1;
+            }
+          fi
+          grep -Fq "## [$version] — " CHANGELOG.md || { echo "::error::Version has no finalized changelog"; exit 1; }
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "v$version already has a GitHub Release; refusing duplicate publication."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Repository ruleset disallows arbitrary automation from creating v* tags.
+          # A maintainer must create the protected tag pointing to exact main HEAD.
+          tag_sha=$(git ls-remote --tags origin "refs/tags/v$version^{}" | cut -f1)
+          [[ -n "$tag_sha" ]] || tag_sha=$(git ls-remote --tags origin "refs/tags/v$version" | cut -f1)
+          if [[ -z "$tag_sha" ]]; then
+            echo "Protected tag v$version not yet created. Owner must create it; no publication."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          [[ "$tag_sha" == "$GITHUB_SHA" ]] || { echo "::error::Release tag and source SHA differ"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+
+  verify-platforms:
+    name: Release verify (${{ matrix.os }})
+    needs: authorize
+    if: needs.authorize.outputs.publish == 'true'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run check
+
+  package:
+    name: Verify and package immutable VSIX
+    needs: authorize
+    if: needs.authorize.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    outputs:
+      sha256: ${{ steps.checksum.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify and create exact VSIX
+        if: inputs.recovery_run_id == ''
+        run: |
+          npm run check
+          npx --no-install vsce package --out noditrivo.vsix
+          sha256sum noditrivo.vsix > noditrivo.vsix.sha256
+      - name: Reuse earlier immutable VSIX for partial-publish recovery
+        if: inputs.recovery_run_id != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: noditrivo-release-vsix
+          run-id: ${{ inputs.recovery_run_id }}
+          github-token: ${{ github.token }}
+      - name: Smoke-test exact bytes and record SHA-256
+        id: checksum
+        shell: bash
+        run: |
+          sha256sum --check noditrivo.vsix.sha256
+          node scripts/smoke-vsix.cjs noditrivo.vsix
+          echo "sha256=$(cut -d' ' -f1 noditrivo.vsix.sha256)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: noditrivo-release-vsix
+          path: |
+            noditrivo.vsix
+            noditrivo.vsix.sha256
+          if-no-files-found: error
+          retention-days: 90
+      - name: Generate CycloneDX SBOM
+        run: |
+          mkdir -p reports
+          npm sbom --sbom-format cyclonedx > reports/noditrivo-sbom.cdx.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: noditrivo-release-evidence
+          path: reports/noditrivo-sbom.cdx.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: noditrivo.vsix
+          create-storage-record: false
+
+  marketplace:
+    name: Publish Visual Studio Marketplace via OIDC
+    needs: [authorize, verify-platforms, package]
+    if: needs.authorize.outputs.publish == 'true' && (github.event_name != 'workflow_dispatch' || inputs.registries == 'both' || inputs.registries == 'marketplace')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: marketplace
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: noditrivo-release-vsix
+      - name: Verify artifact identical to build job
+        env:
+          EXPECTED_SHA: ${{ needs.package.outputs.sha256 }}
+        run: echo "$EXPECTED_SHA  noditrivo.vsix" | sha256sum --check -
+      - name: Install pinned OIDC publisher
+        run: npm install --global --ignore-scripts --no-audit --no-fund @vscode/vsce@4.1.0
+      - name: Publish exact verified package (no rebuild)
+        run: vsce publish --oidc --packagePath noditrivo.vsix --skip-duplicate
+
+  open-vsx:
+    name: Publish Open VSX via OIDC
+    needs: [authorize, verify-platforms, package]
+    if: needs.authorize.outputs.publish == 'true' && (github.event_name != 'workflow_dispatch' || inputs.registries == 'both' || inputs.registries == 'open-vsx')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: open-vsx
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: noditrivo-release-vsix
+      - name: Verify artifact identical to build job
+        env:
+          EXPECTED_SHA: ${{ needs.package.outputs.sha256 }}
+        run: echo "$EXPECTED_SHA  noditrivo.vsix" | sha256sum --check -
+      - name: Install pinned Open VSX publisher
+        run: npm install --global --ignore-scripts --no-audit --no-fund ovsx@1.3.0
+      - name: Publish exact verified package (no rebuild)
+        run: ovsx publish noditrivo.vsix --trusted-publishing
+
+  github-release:
+    name: GitHub Release from protected tag
+    needs: [authorize, package, marketplace, open-vsx]
+    if: ${{ !cancelled() && needs.package.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.marketplace.result) && contains(fromJSON('["success","skipped"]'), needs.open-vsx.result) && (needs.marketplace.result == 'success' || needs.open-vsx.result == 'success') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: github-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: noditrivo-release-vsix
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: noditrivo-release-evidence
+          path: reports
+      - name: Verify release asset immutability
+        env:
+          EXPECTED_SHA: ${{ needs.package.outputs.sha256 }}
+        run: echo "$EXPECTED_SHA  noditrivo.vsix" | sha256sum --check -
+      - name: Create GitHub Release using already approved protected tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ needs.authorize.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v$RELEASE_VERSION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "GitHub Release $tag exists, no mutation."
+            exit 0
+          fi
+          gh release create "$tag" noditrivo.vsix noditrivo.vsix.sha256 reports/noditrivo-sbom.cdx.json \
+            --title "Noditrivo $RELEASE_VERSION" --generate-notes
+          mkdir -p verify
+          gh release download "$tag" --pattern noditrivo.vsix --dir verify
+          published_sha="$(cut -d' ' -f1 noditrivo.vsix.sha256)"
+          echo "$published_sha  verify/noditrivo.vsix" | sha256sum --check -

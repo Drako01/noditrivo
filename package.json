@@ -1,0 +1,112 @@
+{
+  "name": "noditrivo",
+  "displayName": "Noditrivo",
+  "description": "Evidence-based change impact intelligence for VS Code",
+  "version": "0.1.0",
+  "private": false,
+  "license": "MIT",
+  "publisher": "armotusitio",
+  "author": {
+    "name": "Alejandro Di Stefano",
+    "url": "https://armotusitio.com.ar"
+  },
+  "homepage": "https://github.com/Drako01/noditrivo#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Drako01/noditrivo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Drako01/noditrivo/issues"
+  },
+  "keywords": [
+    "impact analysis",
+    "change impact",
+    "breaking changes",
+    "openapi",
+    "sql migrations",
+    "docker compose",
+    "kubernetes",
+    "terraform",
+    "git"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e2e",
+    "theme": "dark"
+  },
+  "pricing": "Free",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onCommand:noditrivo.openControlCenter"
+  ],
+  "main": "./dist/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "%noditrivo.untrusted.description%"
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "noditrivo.openControlCenter",
+        "title": "%noditrivo.command.openControlCenter%"
+      },
+      {
+        "command": "noditrivo.analyzeChanges",
+        "title": "%noditrivo.command.analyzeChanges%"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "noditrivo.openControlCenter"
+        },
+        {
+          "command": "noditrivo.analyzeChanges"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "noditrivo",
+          "title": "Noditrivo",
+          "icon": "media/brand/noditrivo-activity-bar.svg"
+        }
+      ]
+    },
+    "views": {
+      "noditrivo": [
+        {
+          "id": "noditrivo.entry",
+          "name": "Control Center",
+          "type": "tree"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "npm run build && node --test test/*.test.cjs",
+    "bench": "npm run build && node scripts/benchmark.cjs",
+    "package": "npm run check && vsce package && node scripts/smoke-vsix.cjs",
+    "screenshots": "npm run build && node scripts/capture-readme-screenshots.cjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.96.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.2.0",
+    "playwright-core": "^1.65.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "yaml": "2.9.1"
+  }
+}

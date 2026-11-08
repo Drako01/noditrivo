@@ -1,0 +1,12 @@
+# expect: none
+name: ci
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+@@@@
+name: ci
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest

@@ -1,0 +1,33 @@
+# expect: none
+openapi: 3.0.3
+info: {title: Pets, version: '1'}
+paths:
+  /pets:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: {type: string}
+      responses:
+        '201': {description: created}
+---
+openapi: 3.0.3
+info: {title: Pets, version: '2'}
+paths:
+  /pets:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, id]
+              properties:
+                name: {type: string}
+                id: {type: integer, readOnly: true}
+      responses:
+        '201': {description: created}

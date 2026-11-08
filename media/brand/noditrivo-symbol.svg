@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<title id="title">Noditrivo — Flow and Impact</title>
+<g fill="none" stroke-linecap="round" stroke-width="6">
+<path d="M25 64C25 40 40 24 64 24M25 64C25 88 40 104 64 104" stroke="#1686A2"/>
+<path d="M39 64 79 24" stroke="#A78BFA"/>
+<path d="M39 64H100" stroke="#F5B544"/>
+<path d="M39 64 79 104" stroke="#54D8F5"/>
+</g>
+<circle cx="39" cy="64" r="13" fill="#54D8F5"/>
+<circle cx="81" cy="22" r="10" fill="#A78BFA"/>
+<circle cx="104" cy="64" r="10" fill="#F5B544"/>
+<circle cx="81" cy="106" r="10" fill="#54D8F5"/>
+</svg>

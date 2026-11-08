@@ -1,0 +1,5 @@
+{
+  "noditrivo.command.openControlCenter": "Noditrivo: Abrir Centro de Control",
+  "noditrivo.command.analyzeChanges": "Noditrivo: Analizar cambios",
+  "noditrivo.untrusted.description": "El análisis ejecuta Git sobre el repositorio, por eso queda deshabilitado hasta que se confíe en el workspace. El Centro de Control igualmente se puede abrir."
+}

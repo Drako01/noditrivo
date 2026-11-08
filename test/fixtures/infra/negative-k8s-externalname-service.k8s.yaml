@@ -1,0 +1,16 @@
+# expect: none
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  type: ExternalName
+  externalName: db.example.com
+@@@@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  type: ExternalName
+  externalName: db2.example.com
