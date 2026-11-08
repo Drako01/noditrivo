@@ -1,0 +1,16 @@
+:root {
+  --noditrivo-midnight: #0B1020;
+  --noditrivo-graphite: #141D2E;
+  --noditrivo-signal-cyan: #54D8F5;
+  --noditrivo-dependency-violet: #A78BFA;
+  --noditrivo-attention-amber: #F5B544;
+  --noditrivo-cloud-white: #EAF0F7;
+  --noditrivo-radius-card: 12px;
+  --noditrivo-space-1: 4px;
+  --noditrivo-space-2: 8px;
+  --noditrivo-space-3: 12px;
+  --noditrivo-space-4: 16px;
+  --noditrivo-space-6: 24px;
+  --noditrivo-space-8: 32px;
+}
+/* Extension webviews should inherit VS Code theme tokens for production surfaces. */
