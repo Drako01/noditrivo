@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.1 (unreleased)
+- Add the Marketplace and Open VSX extension icon (the 0.1.0 listing was created without one).
+
+## 0.1.0
 - Git baseline diff with direct JS/TS import evidence (untracked files, renames, unsaved editors).
 - OpenAPI breaking-change and SQL migration analyzers with versioned, deduplicated evidence.
 - Docker Compose, Kubernetes and Terraform static analyzers.
