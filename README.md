@@ -4,18 +4,22 @@
 
 Local-first VS Code extension for evidence-based impact analysis across code, APIs, databases and infrastructure.
 
-> **Pre-release prototype (0.1.0).** The initial implementation inspects only local JavaScript/TypeScript relative imports affected by tracked Git changes. Database, API and infrastructure analysis are roadmap items, not released functionality. Name subject to formal trademark clearance.
+> **Pre-release (0.1.0), not published.** Compares your working tree with a Git baseline and reports evidence from direct JS/TS imports, OpenAPI breaking changes, SQL migrations, Docker Compose, Kubernetes and Terraform files. Every analyzer is static and limited to the changed files; the scope is shown in the Control Center. After a second run it also shows which findings are new, existing or resolved. Name subject to formal trademark clearance.
 
 ## Getting started (development)
 
 ```bash
 npm install
-npm run check
+npm run check      # build + tests
+npm run bench      # synthetic performance benchmark
+npm run package    # check + VSIX + smoke test of the VSIX (does not publish)
 ```
+
+Security design: [Threat model](docs/THREAT_MODEL.md). Release steps: [Release readiness](docs/RELEASE.md).
 
 Open this repository in VS Code, press **F5** to launch an Extension Development Host, open a project with Git changes and run **Noditrivo: Analyze Changes** in the Command Palette. The Control Center opens in the main editor area.
 
-Use `HEAD` as baseline for tracked working-tree changes. You can provide another Git ref for comparisons. Untracked files, unsaved changes, aliases and transitive relations are not covered yet.
+Use `HEAD` as baseline for tracked working-tree changes. You can provide another Git ref for comparisons. Untracked files and unsaved editors are included; aliases and transitive relations are not covered.
 
 ## Privacy & safety
 

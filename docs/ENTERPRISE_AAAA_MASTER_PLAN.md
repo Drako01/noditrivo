@@ -42,14 +42,20 @@ Phase 3 scope notes (also surfaced to users as a limitation in the Control Cente
 - Compose: `include`, profiles and `.env` file contents are not evaluated.
 
 ## Phase 4 — Enterprise-grade validation
-- [ ] Incremental cache with invalidation and deterministic replay
-- [ ] Baseline comparison (new / existing / resolved findings)
-- [ ] Security threat modeling and workspace trust tests
-- [ ] Functional VS Code integration tests
-- [ ] Performance benchmarks for medium and large repositories
-- [ ] Packaging and smoke tests of installed VSIX
-- [ ] README screenshots from actual running UI
-- [ ] Marketplace/Open VSX metadata and manual release readiness
+- [x] Incremental cache with invalidation and deterministic replay (`src/core/cache.ts`; content-addressed keys salted with cache/evidence/analyzer versions, LRU bound, validated snapshot persisted in extension storage; a fingerprint test forces `ANALYZER_VERSION` bumps; `test/cache.test.cjs`)
+- [x] Baseline comparison (new / existing / resolved findings) against the previous analysis of the same folder and Git baseline in the session (`src/core/compare.ts`, shown in the Control Center)
+- [x] Security threat modeling and workspace trust tests (`docs/THREAT_MODEL.md`, `test/security.test.cjs`)
+- [x] Functional integration tests of the compiled extension in a **simulated** VS Code host with real Git repositories (`test/extension.test.cjs`, `test/helpers/vscodeHost.cjs`)
+- [ ] Functional tests inside the real VS Code (`@vscode/test-electron`; needs downloading VS Code, not done)
+- [x] Performance benchmarks for medium (500 sources) and large (3000 sources, 1000 changed) synthetic repositories with budget gates (`scripts/benchmark.cjs`, `npm run bench`)
+- [x] Packaging and smoke tests of the VSIX: contents policy, clean unpack and activation of the unpacked build in the simulated host (`scripts/smoke-vsix.cjs`; `npm run package`). Installation into a real VS Code is a manual gate
+- [ ] README screenshots from actual running UI (requires a running VS Code; not captured)
+- [x] Marketplace/Open VSX metadata (repository, keywords, banner, author) and manual release readiness (`docs/RELEASE.md`, `CHANGELOG.md`); icon, publisher/trademark confirmation and publication remain manual and unauthorized
+
+Phase 4 scope notes:
+- The comparison and the cache only live for the extension session/workspace storage; findings are matched by content-hash id, so a statement that moves inside a file appears as one resolved and one new item.
+- The simulated host reproduces the `vscode` API surface the extension uses; it does not replace testing in the real editor.
+- Benchmark budgets are loose regression ceilings on synthetic workloads, not performance guarantees.
 
 ## Definition of Done
 Every shipped finding has traceable evidence and explicit analyzer scope. Changed-file and baseline semantics are documented. No implicit mutation of project, database or infrastructure. No claims of fully supported ecosystems without corresponding fixtures, tests and validations. Tests and package smoke must pass before publication. No automatic publishing enabled.

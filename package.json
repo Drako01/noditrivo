@@ -6,6 +6,34 @@
   "private": false,
   "license": "MIT",
   "publisher": "armotusitio",
+  "author": {
+    "name": "Alejandro Di Stefano",
+    "url": "https://armotusitio.com.ar"
+  },
+  "homepage": "https://github.com/Drako01/noditrivo#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Drako01/noditrivo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Drako01/noditrivo/issues"
+  },
+  "keywords": [
+    "impact analysis",
+    "change impact",
+    "breaking changes",
+    "openapi",
+    "sql migrations",
+    "docker compose",
+    "kubernetes",
+    "terraform",
+    "git"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e2e",
+    "theme": "dark"
+  },
+  "pricing": "Free",
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -48,7 +76,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "npm run build && node --test test/*.test.cjs",
-    "package": "npm run check && vsce package"
+    "bench": "npm run build && node scripts/benchmark.cjs",
+    "package": "npm run check && vsce package && node scripts/smoke-vsix.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

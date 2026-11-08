@@ -23,11 +23,18 @@ Updated: 2026-11-07.
 - [x] Fixture corpus `test/fixtures/infra/` (33 cases, 0 false positives) plus unit tests; `npm run check`: build OK, 43/43 tests passing
 - [x] Pure analyzers (no process, network or filesystem access; enforced by a test); secret values never enter evidence
 
+## Phase 4 completion
+- [x] Incremental cache, deterministic replay and comparison with the previous analysis
+- [x] Threat model and security tests; simulated-host functional tests; benchmarks (medium: ~115 ms cold, large: ~280 ms cold on the development machine)
+- [x] `npm run package`: check 70 tests (69 pass, VSIX smoke skipped inside `check` and executed after `vsce package`), VSIX 257 files, smoke test passed
+- [x] Marketplace metadata and `docs/RELEASE.md`
+
 ## Not validated yet
-- [ ] Manual end-to-end testing inside VS Code (the `vscode`-dependent layer `src/analysis.ts` and `src/extension.ts` is type-checked but not exercised by automated tests)
-- [ ] Verify VSIX packaging
+- [ ] Manual end-to-end testing inside a real VS Code (the host used by automated tests is simulated)
+- [ ] Install the VSIX in a real VS Code
 - [ ] Inspect real screens and capture screenshots
-- [ ] Security and multi-root QA
+- [ ] Multi-root and Restricted Mode QA in the real editor
+- [ ] Extension icon (PNG), publisher and trademark confirmation
 - [ ] CI jobs (deliberately not enabled)
 - [ ] Release or marketplace publication (not authorized)
 
