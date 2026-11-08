@@ -49,7 +49,7 @@ Phase 3 scope notes (also surfaced to users as a limitation in the Control Cente
 - [ ] Functional tests inside the real VS Code (`@vscode/test-electron`; needs downloading VS Code, not done)
 - [x] Performance benchmarks for medium (500 sources) and large (3000 sources, 1000 changed) synthetic repositories with budget gates (`scripts/benchmark.cjs`, `npm run bench`)
 - [x] Packaging and smoke tests of the VSIX: contents policy, clean unpack and activation of the unpacked build in the simulated host (`scripts/smoke-vsix.cjs`; `npm run package`). Installation into a real VS Code is a manual gate
-- [ ] README screenshots from actual running UI (requires a running VS Code; not captured)
+- [x] README screenshots from the actual running UI in a real VS Code (`npm run screenshots`; `scripts/capture-readme-screenshots.cjs`, `docs/images/`)
 - [x] Marketplace/Open VSX metadata (repository, keywords, banner, author) and manual release readiness (`docs/RELEASE.md`, `CHANGELOG.md`); icon, publisher/trademark confirmation and publication remain manual and unauthorized
 
 Phase 4 scope notes:
