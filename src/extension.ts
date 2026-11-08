@@ -99,6 +99,22 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   };
 
+  // The Activity Bar icon is a launch surface; the working UI stays in the central editor.
+  const entry = vscode.window.createTreeView('noditrivo.entry', {
+    treeDataProvider: {
+      getTreeItem: (): vscode.TreeItem => new vscode.TreeItem('Open Noditrivo Control Center'),
+      getChildren: (): vscode.TreeItem[] => {
+        const item = new vscode.TreeItem('Open Noditrivo Control Center');
+        item.command = { command: 'noditrivo.openControlCenter', title: 'Open Noditrivo Control Center' };
+        return [item];
+      },
+    },
+  });
+  context.subscriptions.push(entry);
+  context.subscriptions.push(entry.onDidChangeVisibility(event => {
+    if (event.visible) open();
+  }));
+
   context.subscriptions.push(
     vscode.commands.registerCommand('noditrivo.openControlCenter', open),
     vscode.commands.registerCommand('noditrivo.analyzeChanges', async () => {
