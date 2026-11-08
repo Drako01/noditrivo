@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'node:path';
+import { NO_CACHE, type AnalysisCache } from './core/cache';
 import type { DocumentChange } from './core/evidence';
 import { getChangedFiles, readFileAtBaseline } from './core/git';
 import { analyzeImpact, isAnalyzableDocument, type ChangedFile, type ImpactReport } from './core/impact';
@@ -46,7 +47,7 @@ function collectUnsaved(root: vscode.WorkspaceFolder): Map<string, vscode.TextDo
   return unsaved;
 }
 
-export async function runAnalysis(root: vscode.WorkspaceFolder, baseline: string, token: vscode.CancellationToken): Promise<ImpactReport> {
+export async function runAnalysis(root: vscode.WorkspaceFolder, baseline: string, token: vscode.CancellationToken, cache: AnalysisCache = NO_CACHE): Promise<ImpactReport> {
   const abort = new AbortController();
   const subscription = token.onCancellationRequested(() => abort.abort());
   try {
@@ -131,7 +132,7 @@ export async function runAnalysis(root: vscode.WorkspaceFolder, baseline: string
       if (document) documents.push(document);
     });
 
-    return analyzeImpact(baseline, changed, sources, { scannedFiles: sources.size, skippedLarge, skippedUnreadable, truncated }, documents);
+    return analyzeImpact(baseline, changed, sources, { scannedFiles: sources.size, skippedLarge, skippedUnreadable, truncated }, documents, cache);
   } finally {
     subscription.dispose();
   }

@@ -4,8 +4,10 @@ import type { ChangeStatus } from './impact';
 /** Bumped whenever the shape of `Evidence` changes incompatibly. */
 export const EVIDENCE_SCHEMA_VERSION = 1;
 
-export type AnalyzerId = 'openapi' | 'sql' | 'compose' | 'kubernetes' | 'terraform';
-export type Severity = 'breaking' | 'potentially-breaking' | 'info';
+export const ANALYZER_IDS = ['openapi', 'sql', 'compose', 'kubernetes', 'terraform'] as const;
+export type AnalyzerId = typeof ANALYZER_IDS[number];
+export const SEVERITIES = ['breaking', 'potentially-breaking', 'info'] as const;
+export type Severity = typeof SEVERITIES[number];
 
 /** Every rule an analyzer can emit. Each one has `rule.<id>` copy in the i18n catalog. */
 export const RULE_IDS = [
@@ -104,6 +106,23 @@ export function createEvidence(draft: EvidenceDraft): Evidence {
     .digest('hex')
     .slice(0, 16);
   return { schemaVersion: EVIDENCE_SCHEMA_VERSION, id, ...draft };
+}
+
+const isOneOf = <T extends string>(options: readonly T[], value: unknown): value is T => typeof value === 'string' && (options as readonly string[]).includes(value);
+
+/**
+ * Rebuilds evidence from untrusted data (e.g. a persisted cache). Returns `undefined` unless every
+ * field is valid and the id matches the content hash; unknown extra properties are dropped.
+ */
+export function parseEvidence(value: unknown): Evidence | undefined {
+  if (typeof value !== 'object' || value === null) return undefined;
+  const raw = value as Record<string, unknown>;
+  const { analyzer, rule, severity, confidence, file, subject, location } = raw;
+  if (!isOneOf(ANALYZER_IDS, analyzer) || !isOneOf(RULE_IDS, rule) || !isOneOf(SEVERITIES, severity) || !isOneOf(['high', 'medium'] as const, confidence)) return undefined;
+  if (typeof file !== 'string' || typeof subject !== 'string' || typeof location !== 'string') return undefined;
+  if (raw.schemaVersion !== EVIDENCE_SCHEMA_VERSION) return undefined;
+  const evidence = createEvidence({ analyzer, rule, severity, confidence, file, subject, location });
+  return evidence.id === raw.id ? evidence : undefined;
 }
 
 /** Records one finding of a fixed analyzer and file; shared by every analyzer that walks a document. */

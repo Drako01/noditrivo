@@ -1,11 +1,16 @@
 import * as vscode from 'vscode';
 import { randomBytes } from 'node:crypto';
 import { AnalysisError, isCancelled, runAnalysis } from './analysis';
+import { MemoryAnalysisCache } from './core/cache';
+import { ReportHistory } from './core/compare';
 import { isValidGitBaseline } from './core/git';
 import { resolveLocale, translate, type MessageKey, type MessageParams } from './i18n';
 import { renderControlCenter, type ViewState } from './ui/controlCenter';
 
 const DEFAULT_BASELINE = 'HEAD';
+const CACHE_STATE_KEY = 'noditrivo.analysisCache';
+const CACHE_MAX_ENTRIES = 5000;
+const CACHE_PERSISTED_ENTRIES = 1000;
 
 const isAnalyzeMessage = (message: unknown): message is { type: 'analyze'; baseline: string } =>
   typeof message === 'object' && message !== null &&
@@ -15,6 +20,19 @@ const isAnalyzeMessage = (message: unknown): message is { type: 'analyze'; basel
 export function activate(context: vscode.ExtensionContext): void {
   const locale = resolveLocale(vscode.env.language);
   const tr = (key: MessageKey, params?: MessageParams): string => translate(locale, key, params);
+
+  // The cache only holds derived, secret-free evidence keyed by content hash; it lives in extension storage, never in the project.
+  const cache = new MemoryAnalysisCache(CACHE_MAX_ENTRIES);
+  cache.restore(context.workspaceState.get(CACHE_STATE_KEY));
+  const history = new ReportHistory();
+  const persistCache = async (): Promise<void> => {
+    try {
+      await context.workspaceState.update(CACHE_STATE_KEY, cache.snapshot(CACHE_PERSISTED_ENTRIES));
+    } catch (error) {
+      // A cache that cannot be saved only costs speed on the next session; surface it for diagnosis.
+      console.warn('Noditrivo: could not persist the analysis cache.', error);
+    }
+  };
 
   let panel: vscode.WebviewPanel | undefined;
   let state: ViewState = { baseline: DEFAULT_BASELINE, phase: 'idle' };
@@ -67,9 +85,11 @@ export function activate(context: vscode.ExtensionContext): void {
       setState({ baseline, phase: 'running' });
       const report = await vscode.window.withProgress(
         { location: vscode.ProgressLocation.Notification, title: tr('cmd.progress'), cancellable: true },
-        (_progress, token) => runAnalysis(root, baseline, token),
+        (_progress, token) => runAnalysis(root, baseline, token, cache),
       );
-      setState({ baseline, phase: 'done', report });
+      const comparison = history.record(`${root.uri.toString()}\0${baseline}`, report);
+      await persistCache();
+      setState({ baseline, phase: 'done', report, ...(comparison ? { comparison } : {}) });
     } catch (error) {
       if (isCancelled(error)) setState({ baseline, phase: 'cancelled' });
       else if (error instanceof AnalysisError) fail(baseline, tr(error.key, error.params));

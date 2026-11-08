@@ -1,4 +1,5 @@
 import * as path from 'node:path';
+import { NO_CACHE, type AnalysisCache, type CacheMaterial } from './cache';
 import { dedupeEvidence, EVIDENCE_SCHEMA_VERSION, type DocumentChange, type Evidence } from './evidence';
 import { analyzeInfra, isInfraDocument } from './infra';
 import { analyzeOpenApi, looksLikeOpenApi } from './openapi';
@@ -81,15 +82,22 @@ export function affectedPaths(file: ChangedFile): string[] {
   return file.oldPath ? [file.path, file.oldPath] : [file.path];
 }
 
+/** Extension-less import targets that resolve to this file: itself, and its directory when it is an `index`. */
+function importKeys(changed: string): string[] {
+  const name = stripSourceExtension(normalizeRelative(changed));
+  return name.endsWith('/index') ? [name, name.slice(0, -'/index'.length)] : [name];
+}
+
 /**
  * Matches a resolved import target against a changed file, tolerating
  * explicit extensions (`./a.js` for `a.ts`) and directory imports (`./dir` for `dir/index.ts`).
  */
 export function isImportOfChangedFile(target: string, changed: string): boolean {
-  const name = stripSourceExtension(normalizeRelative(changed));
-  const bare = stripSourceExtension(target);
-  return bare === name || name === bare + '/index';
+  return importKeys(changed).includes(stripSourceExtension(target));
 }
+
+/** Everything an analyzer's result depends on for one document. */
+const documentMaterial = (document: DocumentChange): CacheMaterial => [document.path, document.status, document.before, document.after];
 
 export function analyzeImpact(
   baseline: string,
@@ -97,6 +105,7 @@ export function analyzeImpact(
   sources: ReadonlyMap<string, string>,
   coverage: ScanCoverage = EMPTY_COVERAGE,
   documents: readonly DocumentChange[] = [],
+  cache: AnalysisCache = NO_CACHE,
 ): ImpactReport {
   const byPath = new Map<string, ChangedFile>();
   for (const file of changedFiles) {
@@ -105,18 +114,26 @@ export function analyzeImpact(
   }
   const changed = [...byPath.values()].sort((a, b) => a.path.localeCompare(b.path));
 
+  // Index changed paths by the import targets that resolve to them: one lookup per import instead of a scan of all changes.
+  const changedByTarget = new Map<string, Array<{ readonly change: ChangedFile; readonly candidate: string }>>();
+  for (const change of changed) {
+    for (const candidate of affectedPaths(change)) {
+      for (const key of importKeys(candidate)) {
+        const entries = changedByTarget.get(key) ?? [];
+        entries.push({ change, candidate });
+        changedByTarget.set(key, entries);
+      }
+    }
+  }
+
   const findings: ImpactFinding[] = [];
   for (const [rawFile, content] of sources) {
     const file = normalizeRelative(rawFile);
-    for (const specifier of extractLocalImports(content)) {
-      const target = resolveLocalImport(file, specifier);
-      for (const change of changed) {
-        for (const candidate of affectedPaths(change)) {
-          if (file === candidate) continue;
-          if (isImportOfChangedFile(target, candidate)) {
-            findings.push({ changedFile: candidate, changeStatus: change.status, affectedFile: file, kind: 'direct-import', specifier, confidence: 'high' });
-          }
-        }
+    for (const specifier of cache.memo('imports', [content], () => extractLocalImports(content))) {
+      const target = stripSourceExtension(resolveLocalImport(file, specifier));
+      for (const { change, candidate } of changedByTarget.get(target) ?? []) {
+        if (file === candidate) continue;
+        findings.push({ changedFile: candidate, changeStatus: change.status, affectedFile: file, kind: 'direct-import', specifier, confidence: 'high' });
       }
     }
   }
@@ -126,20 +143,26 @@ export function analyzeImpact(
   if (coverage.truncated) limitations.push('scan-truncated');
   if (coverage.skippedLarge + coverage.skippedUnreadable > 0) limitations.push('files-skipped');
 
-  const openApi = documents.flatMap(analyzeOpenApi);
-  const sql = documents.filter(document => SQL_FILE.test(document.path)).flatMap(analyzeSql);
-  if (documents.some(document => [document.before, document.after].some(text => text !== undefined && looksLikeOpenApi(text)))) {
-    limitations.push('openapi-static-comparison');
-  }
-  if (documents.some(document => SQL_FILE.test(document.path))) limitations.push('sql-static-parse');
-  if (documents.some(isInfraDocument)) limitations.push('infra-static-analysis');
+  // Documents arrive in read-completion order; sorting makes the result independent of it.
+  const ordered = [...documents].sort((a, b) => a.path.localeCompare(b.path));
+  const openApiDocuments = ordered.filter(document => [document.before, document.after].some(text => text !== undefined && looksLikeOpenApi(text)));
+  const openApi = openApiDocuments.flatMap(document => cache.memo('evidence', ['openapi', ...documentMaterial(document)], () => analyzeOpenApi(document)));
+  const sql = ordered
+    .filter(document => SQL_FILE.test(document.path))
+    .flatMap(document => cache.memo('evidence', ['sql', ...documentMaterial(document)], () => analyzeSql(document)));
+  // Infrastructure analyzers relate documents to each other, so they are cached for the whole set of relevant documents.
+  const infraDocuments = ordered.filter(isInfraDocument);
+  const infra = cache.memo('evidence', ['infra', ...infraDocuments.flatMap(documentMaterial)], () => analyzeInfra(infraDocuments));
+  if (openApiDocuments.length > 0) limitations.push('openapi-static-comparison');
+  if (ordered.some(document => SQL_FILE.test(document.path))) limitations.push('sql-static-parse');
+  if (infraDocuments.length > 0) limitations.push('infra-static-analysis');
 
   return {
     schemaVersion: EVIDENCE_SCHEMA_VERSION,
     baseline,
     changedFiles: changed,
     findings,
-    evidence: dedupeEvidence([...openApi, ...sql, ...analyzeInfra(documents)]),
+    evidence: dedupeEvidence([...openApi, ...sql, ...infra]),
     coverage,
     limitations,
   };

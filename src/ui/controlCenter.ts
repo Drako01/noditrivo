@@ -1,4 +1,6 @@
-import type { ChangedFile, ImpactReport } from '../core/impact';
+import { findingKey, type BaselineComparison } from '../core/compare';
+import type { Evidence } from '../core/evidence';
+import type { ChangedFile, ImpactFinding, ImpactReport } from '../core/impact';
 import { translate, type Locale, type MessageKey, type MessageParams } from '../i18n';
 
 export type ViewPhase = 'idle' | 'running' | 'done' | 'cancelled' | 'error';
@@ -6,6 +8,8 @@ export interface ViewState {
   readonly baseline: string;
   readonly phase: ViewPhase;
   readonly report?: ImpactReport;
+  /** Difference from the previous analysis of the same baseline; absent on the first run. */
+  readonly comparison?: BaselineComparison;
   readonly error?: string;
 }
 
@@ -68,10 +72,22 @@ export function renderControlCenter(state: ViewState, locale: Locale, nonce: str
       : `<p class="muted">${t('changed.none')}</p>`
     : '';
 
-  const findingItems = report?.findings.slice(0, MAX_LISTED_ITEMS).map(f =>
+  const comparison = state.comparison;
+  const newFindings = new Set(comparison?.findings.added.map(findingKey));
+  const newEvidence = new Set(comparison?.evidence.added.map(item => item.id));
+  const newBadge = (isNew: boolean): string => (isNew ? `<span class="badge">${t('compare.badge.new')}</span>` : '');
+
+  const findingItem = (f: ImpactFinding, isNew: boolean): string =>
     `<li><strong>${t('findings.item', { affected: f.affectedFile, changed: f.changedFile })}</strong>` +
-    `<span class="badge">${t(`status.${f.changeStatus}`)}</span>` +
-    `<div class="muted">${t('findings.evidence', { specifier: f.specifier, affected: f.affectedFile })}</div></li>`).join('') ?? '';
+    `<span class="badge">${t(`status.${f.changeStatus}`)}</span>${newBadge(isNew)}` +
+    `<div class="muted">${t('findings.evidence', { specifier: f.specifier, affected: f.affectedFile })}</div></li>`;
+
+  const evidenceItem = (item: Evidence, isNew: boolean): string =>
+    `<li><strong>${escapeHtml(item.subject)}</strong><span class="badge">${t(`severity.${item.severity}`)}</span>${newBadge(isNew)}` +
+    `<div>${t(`rule.${item.rule}`)}</div>` +
+    `<div class="muted">${t('evidence.location', { file: item.file, location: item.location })}</div></li>`;
+
+  const findingItems = report?.findings.slice(0, MAX_LISTED_ITEMS).map(f => findingItem(f, newFindings.has(findingKey(f)))).join('') ?? '';
 
   const findings = report
     ? report.findings.length
@@ -79,10 +95,23 @@ export function renderControlCenter(state: ViewState, locale: Locale, nonce: str
       : `<p class="muted">${t('findings.none')}</p>`
     : '';
 
-  const evidenceItems = report?.evidence.slice(0, MAX_LISTED_ITEMS).map(item =>
-    `<li><strong>${escapeHtml(item.subject)}</strong><span class="badge">${t(`severity.${item.severity}`)}</span>` +
-    `<div>${t(`rule.${item.rule}`)}</div>` +
-    `<div class="muted">${t('evidence.location', { file: item.file, location: item.location })}</div></li>`).join('') ?? '';
+  const evidenceItems = report?.evidence.slice(0, MAX_LISTED_ITEMS).map(item => evidenceItem(item, newEvidence.has(item.id))).join('') ?? '';
+
+  const compare = (() => {
+    if (!report) return '';
+    const e = comparison?.evidence;
+    const f = comparison?.findings;
+    const body = !e || !f
+      ? `<p class="muted">${t('compare.first')}</p>`
+      : `<p>${t('compare.summary', {
+        added: e.added.length, existing: e.existing.length, resolved: e.resolved.length,
+        importsAdded: f.added.length, importsExisting: f.existing.length, importsResolved: f.resolved.length,
+      })}</p>` + (e.resolved.length + f.resolved.length
+        ? `<h3>${t('compare.resolvedHeading')}</h3><ul>${e.resolved.slice(0, MAX_LISTED_ITEMS).map(item => evidenceItem(item, false)).join('')}` +
+          `${f.resolved.slice(0, MAX_LISTED_ITEMS).map(item => findingItem(item, false)).join('')}${more(e.resolved.length)}${more(f.resolved.length)}</ul>`
+        : `<p class="muted">${t('compare.noneResolved')}</p>`);
+    return `<section class="panel" aria-labelledby="h-compare"><h2 id="h-compare">${t('section.compare')}</h2>${body}</section>`;
+  })();
 
   const evidence = report
     ? report.evidence.length
@@ -117,6 +146,7 @@ export function renderControlCenter(state: ViewState, locale: Locale, nonce: str
     `<div class="grid" aria-label="${t('section.scope')}"><div class="tile"><div class="number">${report?.changedFiles.length ?? '–'}</div><div class="muted">${t('tile.changed')}</div></div>` +
     `<div class="tile"><div class="number">${report?.findings.length ?? '–'}</div><div class="muted">${t('tile.findings')}</div></div>` +
     `<div class="tile"><div class="number">${report?.evidence.length ?? '–'}</div><div class="muted">${t('tile.evidence')}</div></div></div>` +
+    compare +
     (report ? `<section class="panel" aria-labelledby="h-changed"><h2 id="h-changed">${t('section.changed')}</h2>${changedList}</section>` : '') +
     (report ? `<section class="panel" aria-labelledby="h-findings"><h2 id="h-findings">${t('section.findings')}</h2>${findings}</section>` : '') +
     (report ? `<section class="panel" aria-labelledby="h-evidence"><h2 id="h-evidence">${t('section.evidence')}</h2>${evidence}</section>` : '') +
