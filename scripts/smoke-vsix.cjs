@@ -28,7 +28,7 @@ const REQUIRED = [
 ];
 /** Anything matching must never ship: sources, tests, docs, tooling, maps, environment files, nested packages. */
 const FORBIDDEN = [
-  /^extension\/(?:src|test|docs|scripts|\.github|\.git)\//,
+  /^extension\/(?:src|test|docs|demo|scripts|\.github|\.git|\.vscode-test)\//,
   /\.(?:ts|map|vsix|log|env)$/i,
   /(?:^|\/)\.env/,
   /^extension\/(?:tsconfig\.json|\.gitignore|\.vscodeignore)$/,

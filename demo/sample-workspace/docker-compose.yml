@@ -1,0 +1,12 @@
+services:
+  web:
+    image: nginx:1.27
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+      - cache
+  db:
+    image: postgres:16
+  cache:
+    image: redis:7

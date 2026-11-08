@@ -3,3 +3,4 @@ dist/
 *.vsix
 coverage/
 .DS_Store
+.vscode-test/

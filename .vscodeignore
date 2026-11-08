@@ -12,3 +12,6 @@ tsconfig.json
 node_modules/.cache/**
 *.vsix
 *.log
+demo/**
+.vscode-test/**
+media/brand/*.png

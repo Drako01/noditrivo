@@ -1,0 +1,26 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: '1.0'
+paths:
+  /orders:
+    get:
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema: {type: integer}
+      responses:
+        '200': {description: A page of orders}
+  /orders/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    get:
+      responses:
+        '200': {description: One order}
+    delete:
+      responses:
+        '204': {description: Order deleted}
