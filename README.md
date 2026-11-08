@@ -6,6 +6,19 @@ Local-first VS Code extension for evidence-based impact analysis across code, AP
 
 > **Pre-release (0.1.0), not published.** Compares your working tree with a Git baseline and reports evidence from direct JS/TS imports, OpenAPI breaking changes, SQL migrations, Docker Compose, Kubernetes and Terraform files. Every analyzer is static and limited to the changed files; the scope is shown in the Control Center. After a second run it also shows which findings are new, existing or resolved. Name subject to formal trademark clearance.
 
+## Brand identity
+
+The approved **Noditrivo Dark Premium** direction, logo variations, color values, typography, Activity Bar icon and Control Center UX specification are documented in [Brand Identity](docs/BRAND_IDENTITY.md).
+
+![Noditrivo brand](media/brand/noditrivo-logo-dark.svg)
+
+- [Main symbol](media/brand/noditrivo-symbol.svg)
+- [Dark-background logo](media/brand/noditrivo-logo-dark.svg) / [Light-background logo](media/brand/noditrivo-logo-light.svg)
+- [Monochrome VS Code Activity Bar SVG](media/brand/noditrivo-activity-bar.svg) — referenced in `package.json`; click the icon to open the Control Center in the central editor.
+- [Design tokens](media/brand/tokens.css)
+
+**Visual status:** SVGs are editable reconstructions; the original moodboard raster file is not yet stored in this repository. Production PNG exports and screenshots of the final running UI remain to be added and visually validated.
+
 ## Getting started (development)
 
 ```bash
