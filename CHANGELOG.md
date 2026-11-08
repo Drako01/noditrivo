@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 (unreleased)
+## [0.1.1] — 2026-11-08
 - Add the Marketplace and Open VSX extension icon (the 0.1.0 listing was created without one).
 
 ## 0.1.0
