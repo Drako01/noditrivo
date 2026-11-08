@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" role="img" aria-labelledby="title">
+<title id="title">Noditrivo — Change Impact Intelligence</title>
+<rect width="640" height="180" rx="20" fill="#0B1020"/>
+<g transform="translate(23 22) scale(1.04)">
+<path d="M25 64C25 40 40 24 64 24M25 64C25 88 40 104 64 104" fill="none" stroke="#1686A2" stroke-width="6" stroke-linecap="round"/>
+<path d="M39 64 79 24" stroke="#A78BFA" stroke-width="6" stroke-linecap="round"/>
+<path d="M39 64H100" stroke="#F5B544" stroke-width="6" stroke-linecap="round"/>
+<path d="M39 64 79 104" stroke="#54D8F5" stroke-width="6" stroke-linecap="round"/>
+<circle cx="39" cy="64" r="13" fill="#54D8F5"/><circle cx="81" cy="22" r="10" fill="#A78BFA"/><circle cx="104" cy="64" r="10" fill="#F5B544"/><circle cx="81" cy="106" r="10" fill="#54D8F5"/>
+</g>
+<text x="161" y="91" fill="#EAF0F7" font-family="Inter,system-ui,Arial,sans-serif" font-size="57" font-weight="750" letter-spacing="-2">Noditrivo</text>
+<text x="165" y="126" fill="#AABAD2" font-family="Inter,system-ui,Arial,sans-serif" font-size="19" letter-spacing="1.2">CHANGE IMPACT INTELLIGENCE</text>
+</svg>
