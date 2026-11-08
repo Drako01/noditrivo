@@ -1,0 +1,45 @@
+name: "Bug report / Reportar error"
+description: "Reproducible errors in Noditrivo (no private repositories or credentials)"
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Use a sanitized, minimal repository. Do not include confidential paths, tokens, infrastructure files with real values or customer information. Security issues must be disclosed privately."
+  - type: textarea
+    id: summary
+    attributes:
+      label: "Issue summary / Descripción"
+      description: "What actually happened? What result did you expect (a missing finding, a false positive, a crash, a wrong comparison)?"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to reproduce / Pasos"
+      description: "Minimal, safe, reproducible steps on a small sample repository."
+      placeholder: "1. Create a Git repo with openapi.yaml ... 2. Edit ... 3. Run 'Noditrivo: Analyze Changes' with baseline HEAD ..."
+    validations:
+      required: true
+  - type: textarea
+    id: versions
+    attributes:
+      label: "Environment / Entorno"
+      description: "Noditrivo version or commit, VS Code version, OS, Git version, workspace trust state, display language."
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Sanitized evidence or screenshots / Evidencia anonimizada"
+      description: "Control Center output or the smallest file excerpt that triggers the problem. Never paste internal URLs, secret values or customer data."
+    validations:
+      required: false
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: "Safety confirmation / Seguridad"
+      options:
+        - label: "I removed secrets and private/customer data from this issue."
+          required: true
+        - label: "I used a repository I am authorized to share and no third-party production data."
+          required: true

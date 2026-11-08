@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security disclosure / Reporte de seguridad
+    url: https://armotusitio.com.ar/soporte/
+    about: Report vulnerabilities privately and mention "Noditrivo Security"; never post secrets or exploit details publicly.
+  - name: Support / Soporte
+    url: https://armotusitio.com.ar/soporte/
+    about: General support, environment questions and assistance in Spanish or English.

@@ -1,0 +1,35 @@
+name: "Performance regression / Regresión de rendimiento"
+description: "Report an evidence-backed local performance issue without exposing private repositories"
+title: "[Performance]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Only submit sanitized measurements. A single timing sample is not proof of regression. Never include private repository names, customer paths or confidential files."
+  - type: textarea
+    id: scenario
+    attributes:
+      label: "Reproducible local scenario"
+      description: "Repository size (sources, changed files), kinds of changed files, baseline used, cold or warm cache, and whether it reproduces with `npm run bench`."
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: "Baseline and candidate results"
+      description: "Analysis duration, memory if measured, number of repeated runs and the spread between them."
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment fingerprint"
+      description: "OS, CPU, disk type, VS Code and Node versions, Noditrivo commit or version, other extensions running."
+    validations:
+      required: true
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: "Observed evidence and hypotheses"
+      description: "Separate measured facts from suspected causes and state any test limitations."
+    validations:
+      required: false

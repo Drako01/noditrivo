@@ -1,6 +1,6 @@
 # Noditrivo — Manual release readiness
 
-Nothing here is automated on purpose: **no workflow publishes**, and `package.json` has no publish script. A person runs every step.
+Publishing is never triggered by a merge: `.github/workflows/publish.yml` only runs from an owner-created protected `v*` tag (or a manually confirmed dispatch) and each registry sits behind a protected environment that needs approval. A person runs every manual step below.
 
 ## Automated gates (run locally)
 1. `npm ci`
@@ -12,7 +12,7 @@ Nothing here is automated on purpose: **no workflow publishes**, and `package.js
 - [ ] Install the VSIX in a real VS Code (`code --install-extension noditrivo-<version>.vsix`) and run **Noditrivo: Analyze Changes** on a real repository.
 - [ ] Open a repository in Restricted Mode and confirm the analysis is refused with the localized message.
 - [x] Keyboard-only and screen-reader pass; light, dark and high-contrast themes (Phase 1 QA; signed off by the maintainer).
-- [ ] Capture the README screenshots from that running UI (none are committed yet).
+- [x] README screenshots captured from the running UI (`npm run screenshots`); re-run them when the UI changes.
 - [ ] Multi-root workspace: folder picker and boundaries.
 - [ ] Add a 128×128 PNG `icon` to `package.json` (the Marketplace rejects SVG icons).
 - [ ] Confirm the `armotusitio` publisher exists on the Marketplace and Open VSX; confirm trademark clearance for the name.
@@ -20,4 +20,6 @@ Nothing here is automated on purpose: **no workflow publishes**, and `package.js
 - [ ] Update `CHANGELOG.md`, bump `version`, tag.
 
 ## Publishing (only with explicit approval)
-`vsce publish` / `ovsx publish` need a personal access token that must never be stored in the repository or CI without a deliberate decision.
+`.github/workflows/publish.yml` publishes only when all of these hold: `package.json` is not private, the version has a finalized `## [x.y.z] — ` heading in `CHANGELOG.md`, a protected `vX.Y.Z` tag points at the exact commit being built, and the owner approves the `marketplace`, `open-vsx` and `github-release` environments. It rebuilds nothing after verification: the same VSIX (checked by SHA-256) goes to both registries, with provenance attestation and an SBOM.
+
+One-time owner setup (not automated): create those three environments with required reviewers, enable trusted publishing (OIDC) for the Marketplace and Open VSX publisher, and import `.github/rulesets/*.json` (**Settings → Rules → Rulesets**). No personal access token should ever be stored in the repository or CI.
